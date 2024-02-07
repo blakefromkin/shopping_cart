@@ -1,8 +1,8 @@
 import { useState } from "react";
 
-const AddForm = () => {
+const AddForm = ({ onSubmit }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [fields, setFields] = useState({ name: "", price: "", quantity: "" });
+  const [fields, setFields] = useState({ title: "", price: "", quantity: "" });
 
   const handleCancelClick = () => {
     setIsVisible(false);
@@ -19,7 +19,7 @@ const AddForm = () => {
         </button>
       </p>
       <h3>Add Product</h3>
-      <form>
+      <form onSubmit={() => onSubmit(fields)}>
         <div className="input-group">
           <label htmlFor="product-name">Product Name:</label>
           <input
@@ -28,7 +28,7 @@ const AddForm = () => {
             name="product-name"
             onChange={(e) =>
               setFields((prev) => {
-                return { ...prev, name: e.target.value };
+                return { ...prev, title: e.target.value };
               })
             }
             required

@@ -10,16 +10,27 @@ const App = () => {
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
-    const getData = async () => {
+    const getProducts = async () => {
       try {
         const { data } = await axios.get("/api/products");
-        console.log(data);
         setProducts(data);
       } catch (err) {
         console.log(err.message);
       }
     };
-    getData();
+    getProducts();
+  }, []);
+
+  useEffect(() => {
+    const getCart = async () => {
+      try {
+        const { data } = await axios.get("/api/cart");
+        setCartItems(data);
+      } catch (err) {
+        console.log(err.message);
+      }
+    };
+    getCart();
   }, []);
 
   const handleAddProduct = async (newProduct) => {
@@ -31,11 +42,89 @@ const App = () => {
     }
   };
 
+  const handleEditProduct = async (editedProduct, id) => {
+    try {
+      const { data } = await axios.put(`/api/products/${id}`, editedProduct);
+      setProducts((prev) => {
+        return prev.map((product) => {
+          if (product._id === data._id) {
+            return data;
+          } else {
+            return product;
+          }
+        });
+      });
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    try {
+      await axios.delete(`api/products/${productId}`);
+      setProducts((prev) => {
+        return prev.filter((product) => product._id !== productId);
+      });
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+
+  const handleAddToCart = async (productId) => {
+    try {
+      const { data } = await axios.post(`api/add-to-cart`, {
+        productId,
+      });
+      console.log(data);
+      setProducts((prev) => {
+        return prev.map((product) => {
+          if (product._id === productId) {
+            return data.product;
+          } else {
+            return product;
+          }
+        });
+      });
+
+      setCartItems((prev) => {
+        const idx = prev.findIndex((item) => item._id === data.item._id);
+        console.log(idx);
+        if (idx >= 0) {
+          return prev.map((item, index) => {
+            if (index === idx) {
+              return { ...item, quantity: item.quantity + 1 };
+            } else {
+              return item;
+            }
+          });
+        } else {
+          return prev.concat(data.item);
+        }
+      });
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      await axios.post("/api/checkout");
+      setCartItems([]);
+    } catch (err) {
+      console.log(err.message);
+    }
+  };
+
   return (
     <div id="app">
-      <Header cartItems={cartItems} />
+      <Header cartItems={cartItems} onCheckout={handleCheckout} />
       <main>
-        <ProductList products={products} />
+        <ProductList
+          products={products}
+          onEdit={handleEditProduct}
+          onDelete={handleDeleteProduct}
+          onAddToCart={handleAddToCart}
+        />
         <AddForm onSubmit={handleAddProduct} />
       </main>
     </div>

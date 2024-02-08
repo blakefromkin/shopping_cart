@@ -1,27 +1,58 @@
 import { useState } from "react";
+import EditForm from "./EditForm";
 
-const ProductList = ({ products }) => {
+const ProductList = ({ products, onEdit, onDelete, onAddToCart }) => {
   return (
     <div className="product-listing">
       <h2>Products</h2>
       <ul className="product-list">
         {products.map((prod) => (
-          <Product key={prod._id} {...prod} />
+          <Product
+            key={prod._id}
+            {...prod}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onAddToCart={onAddToCart}
+          />
         ))}
       </ul>
     </div>
   );
 };
 
-const Product = ({ title, price, quantity }) => {
+const Product = ({
+  _id,
+  title,
+  price,
+  quantity,
+  onEdit,
+  onDelete,
+  onAddToCart,
+}) => {
   const [showEditForm, setShowEditForm] = useState(false);
 
-  const handleEditClick = () => {
+  const handleEditClick = (e) => {
+    e.preventDefault();
     setShowEditForm(true);
   };
 
-  const handleCancelClick = () => {
+  const handleCancelClick = (e) => {
+    e.preventDefault();
     setShowEditForm(false);
+  };
+
+  const handleDeleteClick = (e) => {
+    e.preventDefault();
+    onDelete(_id);
+  };
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    if (Number(quantity) === 0) {
+      window.alert("Item is out of stock.");
+    } else {
+      onAddToCart(_id);
+    }
   };
 
   return (
@@ -31,12 +62,14 @@ const Product = ({ title, price, quantity }) => {
         <p className="price">{`$${price === Math.floor(price) ? `${price}.00` : price}`}</p>
         <p className="quantity">{quantity} left in stock</p>
         <div className="actions product-actions">
-          <button className="add-to-cart">Add to Cart</button>
+          <button className="add-to-cart" onClick={handleAddToCart}>
+            Add to Cart
+          </button>
           <button className="edit" onClick={handleEditClick}>
             Edit
           </button>
         </div>
-        <button className="delete-button">
+        <button className="delete-button" onClick={handleDeleteClick}>
           <span>X</span>
         </button>
       </div>
@@ -47,64 +80,11 @@ const Product = ({ title, price, quantity }) => {
           title={title}
           price={price}
           quantity={quantity}
+          productId={_id}
+          onSubmit={onEdit}
         />
       )}
     </li>
-  );
-};
-
-const EditForm = ({ onCancelClick, title, price, quantity }) => {
-  const [titleField, setTitleField] = useState(title);
-  const [priceField, setPriceField] = useState(price);
-  const [quantityField, setQuantityField] = useState(quantity);
-
-  return (
-    <div className="edit-form">
-      <h3>Edit Product</h3>
-      <form>
-        <div className="input-group">
-          <label htmlFor="product-name">Product Name</label>
-          <input
-            type="text"
-            id="product-name"
-            value={titleField}
-            onChange={(e) => setTitleField(e.target.value)}
-            aria-label="Product Name"
-          />
-        </div>
-
-        <div className="input-group">
-          <label htmlFor="product-price">Price</label>
-          <input
-            type="number"
-            id="product-price"
-            value={priceField}
-            onChange={(e) => setPriceField(e.target.value)}
-            min="0"
-            aria-label="Product Price"
-          />
-        </div>
-
-        <div className="input-group">
-          <label htmlFor="product-quantity">Quantity</label>
-          <input
-            type="number"
-            id="product-quantity"
-            value={quantityField}
-            onChange={(e) => setQuantityField(e.target.value)}
-            min="0"
-            aria-label="Product Quantity"
-          />
-        </div>
-
-        <div className="actions form-actions">
-          <button type="submit">Update</button>
-          <button type="button" onClick={onCancelClick}>
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
   );
 };
 

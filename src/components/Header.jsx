@@ -1,4 +1,9 @@
-const Header = ({ cartItems }) => {
+const Header = ({ cartItems, onCheckout }) => {
+  const handleCheckout = (e) => {
+    e.preventDefault();
+    onCheckout();
+  };
+
   return (
     <>
       <header>
@@ -17,7 +22,9 @@ const Header = ({ cartItems }) => {
               0,
             )}
           </p>
-          <button className="checkout">Checkout</button>
+          <button className="checkout" onClick={handleCheckout}>
+            Checkout
+          </button>
         </div>
       </header>
     </>
@@ -36,10 +43,10 @@ const CartItemsTable = ({ cartItems }) => {
       </thead>
       <tbody>
         {cartItems.map((item) => (
-          <tr key={item.id}>
+          <tr key={item._id}>
             <td>{item.title}</td>
             <td>{item.quantity}</td>
-            <td>{item.price}</td>
+            <td>{`$${item.price === Math.floor(item.price) ? `${item.price}.00` : item.price}`}</td>
           </tr>
         ))}
       </tbody>

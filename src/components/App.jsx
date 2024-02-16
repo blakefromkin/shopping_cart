@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import * as itemsService from "../services/items";
 
 import Header from "./Header";
 import ProductList from "./ProductList";
@@ -10,108 +10,78 @@ const App = () => {
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
-    const getProducts = async () => {
-      try {
-        const { data } = await axios.get("/api/products");
-        setProducts(data);
-      } catch (err) {
-        console.log(err.message);
-      }
+    const fetchProducts = async () => {
+      const productsData = await itemsService.getProducts();
+      setProducts(productsData);
     };
-    getProducts();
+    fetchProducts();
   }, []);
 
   useEffect(() => {
     const getCart = async () => {
-      try {
-        const { data } = await axios.get("/api/cart");
-        setCartItems(data);
-      } catch (err) {
-        console.log(err.message);
-      }
+      const cartData = await itemsService.getCart();
+      setCartItems(cartData);
     };
     getCart();
   }, []);
 
   const handleAddProduct = async (newProduct) => {
-    try {
-      const { data } = await axios.post("/api/products", newProduct);
-      setProducts((prev) => prev.concat(data));
-    } catch (err) {
-      console.log(err.message);
-    }
+    const addedProduct = await itemsService.addProduct(newProduct);
+    setProducts((prev) => prev.concat(addedProduct));
   };
 
   const handleEditProduct = async (editedProduct, id) => {
-    try {
-      const { data } = await axios.put(`/api/products/${id}`, editedProduct);
-      setProducts((prev) => {
-        return prev.map((product) => {
-          if (product._id === data._id) {
-            return data;
-          } else {
-            return product;
-          }
-        });
+    const data = await itemsService.editProduct(editedProduct, id);
+    setProducts((prev) => {
+      return prev.map((product) => {
+        if (product._id === data._id) {
+          return data;
+        } else {
+          return product;
+        }
       });
-    } catch (err) {
-      console.log(err.message);
-    }
+    });
   };
 
   const handleDeleteProduct = async (productId) => {
-    try {
-      await axios.delete(`api/products/${productId}`);
-      setProducts((prev) => {
-        return prev.filter((product) => product._id !== productId);
-      });
-    } catch (err) {
-      console.log(err.message);
-    }
+    await itemsService.deleteProduct(productId);
+    setProducts((prev) => {
+      return prev.filter((product) => product._id !== productId);
+    });
   };
 
   const handleAddToCart = async (productId) => {
-    try {
-      const { data } = await axios.post(`api/add-to-cart`, {
-        productId,
-      });
+    const itemData = await itemsService.addToCart(productId);
 
-      setProducts((prev) => {
-        return prev.map((product) => {
-          if (product._id === productId) {
-            return data.product;
-          } else {
-            return product;
-          }
-        });
-      });
-
-      setCartItems((prev) => {
-        const idx = prev.findIndex((item) => item._id === data.item._id);
-        if (idx >= 0) {
-          return prev.map((item, index) => {
-            if (index === idx) {
-              return { ...item, quantity: item.quantity + 1 };
-            } else {
-              return item;
-            }
-          });
+    setProducts((prev) => {
+      return prev.map((product) => {
+        if (product._id === productId) {
+          return itemData.product;
         } else {
-          return prev.concat(data.item);
+          return product;
         }
       });
-    } catch (err) {
-      console.log(err.message);
-    }
+    });
+
+    setCartItems((prev) => {
+      const idx = prev.findIndex((item) => item._id === itemData.item._id);
+      if (idx >= 0) {
+        return prev.map((item, index) => {
+          if (index === idx) {
+            return { ...item, quantity: item.quantity + 1 };
+          } else {
+            return item;
+          }
+        });
+      } else {
+        return prev.concat(itemData.item);
+      }
+    });
   };
 
   const handleCheckout = async () => {
-    try {
-      await axios.post("/api/checkout");
-      setCartItems([]);
-    } catch (err) {
-      console.log(err.message);
-    }
+    await itemsService.clearCart();
+    setCartItems([]);
   };
 
   return (
